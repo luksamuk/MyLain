@@ -19,7 +19,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <editline/readline.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
