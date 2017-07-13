@@ -1,0 +1,73 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Backup files
+*~
+
+# Visual Studio stuff
+Debug/*
+Release/*
+x64/*
+.vs/*
+.vs/oficina2/v14/.suo
+*.opensdf
+*.sdf
+/src/oficina2test
+/oficina2test
+*.vcxproj.user
+
+# Code::Blocks stuff
+bin/*
+obj/*
+*.depend
+*.layout
+*.log
+
+# CMake stuff
+build/*
+cmake/*
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+
+# Documentation
+doc/generated/*
+
+# GNU Global
+GPATH
+GRTAGS
+GTAGS
+
+# Visual Studio Code stuff
+.vscode/.cmaketools.json
