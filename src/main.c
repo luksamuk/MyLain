@@ -54,14 +54,14 @@ int main(int argc, char** argv)
 
         switch(r) {
         case LAIN_RETURN_SUCCESS:
-            puts("Process returned success.");
+            puts("!ans{Ok}");
             break;
         case LAIN_RETURN_ONGOING:
-            puts("Error: Not enough arguments.");
+            puts("!ans{Err:missingargs}");
             lain_reset_all();
             break;
         default:
-            printf("Process returned error code 0x%08X\n"
+            printf("!ans{Err:0x%08X}\n"
                    "On command: \"%s\"\n", r, input);
             lain_reset_all();
             break;

@@ -22,11 +22,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 set(MYLAIN_SOURCES
   src/main.c
   src/global.c
-  src/lexer.c)
+  src/lexer.c
+  src/common.c)
 
 set(MYLAIN_HEADERS
   src/mylain_global.h
-  src/mylain_lexer.h)
+  src/mylain_lexer.h
+  src/mylain_common.h)
 
 add_executable(mylain ${MYLAIN_SOURCES} ${MYLAIN_HEADERS})
 target_link_libraries(mylain readline m)

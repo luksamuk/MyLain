@@ -16,9 +16,13 @@
 
 #include "mylain_lexer.h"
 #include "mylain_global.h"
+#include "mylain_common.h"
 
 enum LAIN_COMMAND lain_get_command(const char* literal)
 {
+    if(LAIN_MSTATE != 0ul)
+        return LAIN_COM_ATOM;
+    
     if(LAIN_CHECK_LITERAL(literal, "exit")
        || LAIN_CHECK_LITERAL(literal, "quit"))
         return LAIN_COM_QUIT;
@@ -30,6 +34,7 @@ enum LAIN_COMMAND lain_get_command(const char* literal)
         return LAIN_COM_HELP;
     else if(LAIN_CHECK_LITERAL(literal, "status"))
         return LAIN_COM_STATUS;
+    
     return LAIN_COM_ATOM;
 }
 
@@ -53,40 +58,47 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
     }
     
     // Get/set config
-    else if(LAIN_CHKSTATE(LAIN_COM_CONFIG)
-            && comm == LAIN_COM_ATOM) {
-        if(LAIN_CHECK_LITERAL(literal, "set")) {
-            assert(LAIN_SUBSTATE == 0ul);
-            LAIN_SUBSTATE |= LAIN_SUBCOM_SETCFG;
-        } else if(LAIN_CHECK_LITERAL(literal, "get")) {
-            assert(LAIN_SUBSTATE == 0ul);
-            LAIN_SUBSTATE |= LAIN_SUBCOM_GETCFG;
-        }
-        else {
-            if(LAIN_SUBSTATE == 0ul) {
-                printf("Config: get/set not specified\n");
-                lain_reset_all();
-                return LAIN_RETURN_FAILURE;
-            }
-
-            else if(LAIN_CHECK_LITERAL(literal, "motto")) {
-                if(LAIN_CHKSUB(LAIN_SUBCOM_GETCFG)) {
-                    printf("\"%s\"\n", LAIN_MOTTO);
-                    lain_reset_all();
-                    return LAIN_RETURN_SUCCESS;
-                } else if(LAIN_CHKSUB(LAIN_SUBCOM_SETCFG)) {
-                    free(LAIN_MOTTO);
-                    LAIN_MOTTO = readline("Input new motto: ");
-                    lain_reset_all();
-                    return LAIN_RETURN_SUCCESS;
-                }
+    else if(LAIN_CHKSTATE(LAIN_COM_CONFIG)) {
+        if(comm == LAIN_COM_ATOM) {
+            if(LAIN_CHECK_LITERAL(literal, "set")) {
+                assert(LAIN_SUBSTATE == 0ul);
+                LAIN_SUBSTATE |= LAIN_SUBCOM_SETCFG;
+            } else if(LAIN_CHECK_LITERAL(literal, "get")) {
+                assert(LAIN_SUBSTATE == 0ul);
+                LAIN_SUBSTATE |= LAIN_SUBCOM_GETCFG;
             }
             else {
-                lain_reset_all();
-                return LAIN_RETURN_FAILURE;
+                if(LAIN_SUBSTATE == 0ul) {
+                    printf("Config: get/set not specified\n");
+                    lain_reset_all();
+                    return LAIN_RETURN_FAILURE;
+                }
+
+                else if(LAIN_CHECK_LITERAL(literal, "motto")) {
+                    if(LAIN_CHKSUB(LAIN_SUBCOM_GETCFG)) {
+                        printf("\"%s\"\n", LAIN_MOTTO);
+                        lain_reset_all();
+                        return LAIN_RETURN_SUCCESS;
+                    } else if(LAIN_CHKSUB(LAIN_SUBCOM_SETCFG)) {
+                        free(LAIN_MOTTO);
+                        LAIN_MOTTO = readline("Input new motto: ");
+                        lain_reset_all();
+                        return LAIN_RETURN_SUCCESS;
+                    }
+                }
+                else {
+                    lain_reset_all();
+                    return LAIN_RETURN_FAILURE;
+                }
             }
+        } else if(comm == LAIN_COM_END
+            && LAIN_SUBSTATE == 0ul) {
+            lain_print_configfields();
+            lain_reset_all();
+            return LAIN_RETURN_SUCCESS;
         }
     }
+
 
     // Status prompt
     else if(LAIN_CHKSTATE(LAIN_COM_STATUS))  {
@@ -119,34 +131,12 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
     // Help prompt
     else if(LAIN_CHKSTATE(LAIN_COM_HELP)) {
         if(comm == LAIN_COM_END) {
-            printf("MyLain v0.0.1\n"
-                   "The very useful, distributed personal assistant "
-                   "for smart homes\n"
-                   "This cheatsheet is temporary and may change.\n\n"
-                   "GENERAL COMMANDS\n"
-                   " help    -- [] Shows this prompt.\n"
-                   "            [command] Shows help for said command.\n"
-                   " quit    -- [] Exits MyLain.\n"
-                   " exit    -- [] Exits MyLain.\n"
-                   " connect -- [ipaddr:port] Connects to server running\n"
-                   "            at the specified IP address and port.\n"
-                   " config  -- [get field] Prints the current\n"
-                   "            configuration for field.\n"
-                   "            [set field] Redefines the current\n"
-                   "            configuration for field.\n"
-                   " status  -- [] Shows general client status. If\n"
-                   "            client is connected to server, server\n"
-                   "            status is fetched as well.\n"
-                   "\n"
-                   "CONFIGURATION FIELDS\n"
-                   " motto   -- MyLain's motto, shown at every startup\n"
-                   "            prompt.\n"
-                   "\n");
+            lain_print_help(NULL);
             lain_reset_all();
             return LAIN_RETURN_SUCCESS;
         }
         else if(comm == LAIN_COM_ATOM) {
-            printf("Sorry, cannot obtain command help for now...\n");
+            lain_print_help(literal);
             lain_reset_all();
             return LAIN_RETURN_NOT_IMPLEMENTED;
         }
