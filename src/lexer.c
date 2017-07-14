@@ -17,6 +17,7 @@
 #include "mylain_lexer.h"
 #include "mylain_global.h"
 #include "mylain_common.h"
+#include "mylain_net.h"
 
 enum LAIN_COMMAND lain_get_command(const char* literal)
 {
@@ -47,14 +48,13 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
     // Connect to remote server
     if(LAIN_CHKSTATE(LAIN_COM_CONNECT)
        && comm == LAIN_COM_ATOM) {
-        printf("I'm gonna try to connect to a third-party"
+        /*printf("I'm gonna try to connect to a third-party "
                "server now. If your connection is good, "
-               "this will most likely speed up processing"
-               "some features you may request.\n");
-        printf("Connecting to server at %s...\n", literal);
-        printf("Fake connection estabilished.\n");
+               "this will most likely speed up processing "
+               "some features you may request.\n");*/
+        printf("Connecting to node at %s...\n", literal);
         lain_reset_all();
-        return LAIN_RETURN_SUCCESS;
+        return lain_net_connect(literal);
     }
     
     // Get/set config
@@ -74,6 +74,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                     return LAIN_RETURN_FAILURE;
                 }
 
+                // Get/set Motto
                 else if(LAIN_CHECK_LITERAL(literal, "motto")) {
                     if(LAIN_CHKSUB(LAIN_SUBCOM_GETCFG)) {
                         printf("\"%s\"\n", LAIN_MOTTO);
@@ -86,6 +87,45 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                         return LAIN_RETURN_SUCCESS;
                     }
                 }
+
+                // Get/set localpprt
+                else if(LAIN_CHECK_LITERAL(literal, "localport")) {
+                    if(LAIN_CHKSUB(LAIN_SUBCOM_GETCFG)) {
+                        printf("%u\n", LAIN_LOCAL_PORT);
+                        lain_reset_all();
+                        return LAIN_RETURN_SUCCESS;
+                    } else if(LAIN_CHKSUB(LAIN_SUBCOM_SETCFG)) {
+                        if(LAIN_NET_READY == LAIN_RETURN_SUCCESS) {
+                            printf("Cannot change port number while connected.\n");
+                            return LAIN_RETURN_FAILURE;
+                        }
+                        char* newports = readline("Input new port number: ");
+                        unsigned newport = strtoul(newports, NULL, 10);
+                        free(newports);
+                        printf("Changing port to %u...\n", newport);
+                        LAIN_LOCAL_PORT = newport;
+                        lain_reset_all();
+                        return LAIN_RETURN_SUCCESS;
+                    }
+                }
+
+                // Get/set interface
+                else if(LAIN_CHECK_LITERAL(literal, "interface")) {
+                    if(LAIN_CHKSUB(LAIN_SUBCOM_GETCFG)) {
+                        printf("%s\n", LAIN_NET_INTERFACE);
+                        lain_reset_all();
+                        return LAIN_RETURN_SUCCESS;
+                    } else if(LAIN_CHKSUB(LAIN_SUBCOM_SETCFG)) {
+                        if(LAIN_NET_READY == LAIN_RETURN_SUCCESS) {
+                            printf("Cannot change interface while connected.\n");
+                            return LAIN_RETURN_FAILURE;
+                        }
+                        LAIN_NET_INTERFACE = readline("Input new interface name: ");
+                        lain_reset_all();
+                        return LAIN_RETURN_SUCCESS;
+                    }
+                }
+                
                 else {
                     lain_reset_all();
                     return LAIN_RETURN_FAILURE;
@@ -114,8 +154,12 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                 uptime_total -= uptime_hours * 3600.0;
                 modf((uptime_total / 60.0), &uptime_minutes);
                 uptime_total -= uptime_minutes * 60.0;
-                printf("Uptime: %0.0lfd %0.0lfh %02.0lfm %02.0lfs\n",
-                       uptime_days, uptime_hours, uptime_minutes, uptime_total);
+                printf("Uptime: %0.0lfd %0.0lfh %02.0lfm %02.0lfs\n"
+                       "Local address: %s:%u\n"
+                       "Connected: %s\n",
+                       uptime_days, uptime_hours, uptime_minutes, uptime_total,
+                       LAIN_LOCAL_IP, LAIN_LOCAL_PORT,
+                       (LAIN_NET_READY == LAIN_RETURN_SUCCESS) ? "YES" : "NO");
             }
             puts("TODO: Add more monitoring features.");
             lain_reset_all();

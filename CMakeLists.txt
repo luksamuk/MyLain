@@ -1,3 +1,4 @@
+
 #################################################################
 #  Copyright (c) 2017 Lucas Vieira <lucas.samuel2002@gmail.com> #
 #  This file is part of MyLain.                                 #
@@ -23,12 +24,14 @@ set(MYLAIN_SOURCES
   src/main.c
   src/global.c
   src/lexer.c
-  src/common.c)
+  src/common.c
+  src/net.c)
 
 set(MYLAIN_HEADERS
   src/mylain_global.h
   src/mylain_lexer.h
-  src/mylain_common.h)
+  src/mylain_common.h
+  src/mylain_net.h)
 
 add_executable(mylain ${MYLAIN_SOURCES} ${MYLAIN_HEADERS})
 target_link_libraries(mylain readline m)

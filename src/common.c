@@ -17,6 +17,7 @@
 #include "mylain_global.h"
 #include "mylain_common.h"
 #include "mylain_lexer.h"
+#include "mylain_net.h"
 
 
 void lain_print_help(const char* literal)
@@ -75,7 +76,11 @@ void lain_print_help(const char* literal)
 void lain_print_configfields(void)
 {
     printf("GENERAL CONFIGURATION\n"
-           "motto -- \"%s\"\n"
+           "motto      -- \"%s\"\n"
+           "localport  -- %u\n"
+           "interface  -- %s\n"
            "\n",
-        LAIN_MOTTO);
+           LAIN_MOTTO,
+           LAIN_LOCAL_PORT,
+           LAIN_NET_INTERFACE);
 }
