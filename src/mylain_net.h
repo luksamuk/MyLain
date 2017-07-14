@@ -17,19 +17,30 @@
 #ifndef MYLAIN_NET
 #define MYLAIN_NET
 
+#include <pthread.h>
+#include "mylain_global.h"
+
 #define LAIN_DEFAULT_PORT      6214
 #define LAIN_DEFAULT_INTERFACE "eth0"
 
-extern unsigned LAIN_LOCAL_PORT;
-extern int      LAIN_LOCAL_SOCKET;
-extern char*    LAIN_LOCAL_IP;
-extern unsigned LAIN_NET_READY;
-extern char*    LAIN_NET_INTERFACE;
+extern unsigned  LAIN_LOCAL_SEND_PORT;
+extern int       LAIN_LOCAL_SEND_SOCKET;
+extern char*     LAIN_LOCAL_IP;
+extern unsigned  LAIN_NET_READY;
+extern char*     LAIN_NET_INTERFACE;
+extern pthread_t LAIN_NET_LISTENER_THREAD;
+
+
+typedef struct LAIN_REMOTE_COM
+{
+    unsigned long long MSTATE;
+    unsigned long long SUBSTATE;
+} lain_remote_t;
 
 
 unsigned lain_net_setup(void);
 unsigned lain_net_connect(const char* address);
 unsigned lain_net_dispose(void);
-
+void*    lain_net_listener_loop(void* unused);
 
 #endif

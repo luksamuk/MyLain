@@ -34,4 +34,4 @@ set(MYLAIN_HEADERS
   src/mylain_net.h)
 
 add_executable(mylain ${MYLAIN_SOURCES} ${MYLAIN_HEADERS})
-target_link_libraries(mylain readline m)
+target_link_libraries(mylain readline m pthread)

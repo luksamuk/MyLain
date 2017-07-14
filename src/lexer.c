@@ -91,7 +91,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                 // Get/set localpprt
                 else if(LAIN_CHECK_LITERAL(literal, "localport")) {
                     if(LAIN_CHKSUB(LAIN_SUBCOM_GETCFG)) {
-                        printf("%u\n", LAIN_LOCAL_PORT);
+                        printf("%u\n", LAIN_LOCAL_SEND_PORT);
                         lain_reset_all();
                         return LAIN_RETURN_SUCCESS;
                     } else if(LAIN_CHKSUB(LAIN_SUBCOM_SETCFG)) {
@@ -103,7 +103,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                         unsigned newport = strtoul(newports, NULL, 10);
                         free(newports);
                         printf("Changing port to %u...\n", newport);
-                        LAIN_LOCAL_PORT = newport;
+                        LAIN_LOCAL_SEND_PORT = newport;
                         lain_reset_all();
                         return LAIN_RETURN_SUCCESS;
                     }
@@ -158,7 +158,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                        "Local address: %s:%u\n"
                        "Connected: %s\n",
                        uptime_days, uptime_hours, uptime_minutes, uptime_total,
-                       LAIN_LOCAL_IP, LAIN_LOCAL_PORT,
+                       LAIN_LOCAL_IP, LAIN_LOCAL_SEND_PORT,
                        (LAIN_NET_READY == LAIN_RETURN_SUCCESS) ? "YES" : "NO");
             }
             puts("TODO: Add more monitoring features.");

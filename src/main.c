@@ -24,10 +24,6 @@ int main(int argc, char** argv)
     LAIN_MSTATE   = 0ul;
     LAIN_SUBSTATE = 0ul;
     LAIN_MOTTO    = malloc(33 * sizeof(char));
-
-    assert(lain_net_setup() == LAIN_RETURN_SUCCESS);
-
-    
     strcpy(LAIN_MOTTO, "Close this world. Open the next.");
     LAIN_LOCAL_RUNNING = LAIN_RETURN_FAILURE;
     {
@@ -35,16 +31,20 @@ int main(int argc, char** argv)
         assert(pass != NULL);
         LAIN_LOCAL_USER  = pass->pw_name;
     }
+    
     printf("MyLain v%u.%u.%u\n"
-           "Hello, %s! Type \"quit\" to exit.\n",
+           "Hello, %s!\n",
            LAIN_VERSION_MAJOR,
            LAIN_VERSION_MINOR,
            LAIN_VERSION_REV,
            LAIN_LOCAL_USER);
     puts(LAIN_MOTTO);
-    puts("");
+    puts("Initializing core modules.");
 
+    // Initialize networking
+    assert(lain_net_setup() == LAIN_RETURN_SUCCESS);
     LAIN_START_TIME = clock();
+    
     while(LAIN_LOCAL_RUNNING) {
         char* input = readline("lain > ");
         {
@@ -78,6 +78,7 @@ int main(int argc, char** argv)
     free(LAIN_MOTTO);
     assert(lain_net_dispose() == LAIN_RETURN_SUCCESS);
 
-    puts("MyLain client halted. Downgrading to reality.\n");
+    printf("MyLain client halted. Downgrading to reality.\n");
+    pthread_exit(NULL);
     return 0;
 }
