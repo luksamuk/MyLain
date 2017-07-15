@@ -15,6 +15,7 @@
 
 #include "mylain_net.h"
 #include "mylain_global.h"
+#include "mylain_lexer.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -22,6 +23,7 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 unsigned  LAIN_LOCAL_SEND_PORT;
 int       LAIN_LOCAL_SEND_SOCKET;
@@ -29,20 +31,28 @@ char*     LAIN_LOCAL_IP;
 unsigned  LAIN_NET_READY;
 char*     LAIN_NET_INTERFACE;
 pthread_t LAIN_NET_LISTENER_THREAD;
+sem_t     LAIN_NET_LISTENER_SEMAPHORE;
+
+lain_com_queue_t* LAIN_REMOTE_COM_QUEUE;
 
 static struct sockaddr_in sa_local;
+static struct sockaddr_in sa_remote;
 
 
 unsigned lain_net_setup(void)
 {
     // Initialize variables
     LAIN_LOCAL_SEND_PORT = LAIN_DEFAULT_PORT;
-    LAIN_NET_READY = LAIN_RETURN_FAILURE;
+    LAIN_NET_READY = 0;
     LAIN_LOCAL_IP = malloc(9 * sizeof(char));
     strcpy(LAIN_LOCAL_IP, "<unknown>");
     LAIN_NET_INTERFACE = malloc(strlen(LAIN_DEFAULT_INTERFACE) * sizeof(char));
     strcpy(LAIN_NET_INTERFACE, LAIN_DEFAULT_INTERFACE);
     LAIN_LOCAL_SEND_SOCKET = -1;
+    LAIN_REMOTE_COM_QUEUE = malloc(sizeof(lain_com_queue_t));
+    LAIN_REMOTE_COM_QUEUE->first = LAIN_REMOTE_COM_QUEUE->last = NULL;
+    LAIN_REMOTE_COM_QUEUE->amount = 0ul;
+    sem_init(&LAIN_NET_LISTENER_SEMAPHORE, 0, 1);
 
     // Initialize listener thread
     assert(pthread_create(&LAIN_NET_LISTENER_THREAD, NULL, lain_net_listener_loop, NULL) == 0);
@@ -65,14 +75,20 @@ void* lain_net_listener_loop(void* unused)
         nanosleep(&suspension_time, NULL);
 
         // Receive message
-        if(recv(LAIN_LOCAL_SEND_SOCKET, &remote_com, sizeof(lain_remote_t), 0) >= 0) {
+        struct sockaddr from;
+        socklen_t       fromsz;
+        if(recvfrom(LAIN_LOCAL_SEND_SOCKET, &remote_com, sizeof(lain_remote_t), 0, &from, &fromsz) > 0) {
             // Process machine state
-            printf("RECEIVED 0x%08llX\n", remote_com.MSTATE);
+            sem_wait(&LAIN_NET_LISTENER_SEMAPHORE);
+            lain_com_enqueue(LAIN_REMOTE_COM_QUEUE, remote_com.MSTATE);
+            sem_post(&LAIN_NET_LISTENER_SEMAPHORE);
         }
+        
     }
 
+    printf("Finishing thread.\n");
     // Properly kill thread
-    pthread_exit(NULL);
+    //pthread_exit(NULL);
     return NULL; // Avoid warnings
 }
 
@@ -80,7 +96,7 @@ unsigned lain_net_connect(const char* address)
 {
     // Open socket
     printf("Opening socket...\n");
-    LAIN_LOCAL_SEND_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
+    LAIN_LOCAL_SEND_SOCKET = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     assert(LAIN_LOCAL_SEND_SOCKET != -1);
 
     struct ifreq ifr;
@@ -98,15 +114,41 @@ unsigned lain_net_connect(const char* address)
     memset(&sa_local, 0, sizeof(struct sockaddr_in));
     sa_local.sin_family = AF_INET;
     sa_local.sin_port   = htons(LAIN_LOCAL_SEND_PORT);
-    sa_local.sin_addr.s_addr = inet_addr(LAIN_LOCAL_IP);
+    sa_local.sin_addr.s_addr =  INADDR_ANY;
     assert(bind(LAIN_LOCAL_SEND_SOCKET, (struct sockaddr*)&sa_local, sizeof(struct sockaddr)) != -1);
+
+    // Set non-blocking mode
+    assert(fcntl(LAIN_LOCAL_SEND_SOCKET, F_SETFL, O_NONBLOCK, 1) != -1);
+
+    LAIN_NET_READY = 1;
 
     printf("Currently listening on port %u.\n", LAIN_LOCAL_SEND_PORT);
 
     printf("Sorry, this is an incomplete feature\n");
 
     // Setup remote server
-    //TODO
+    memset(&sa_remote, 0, sizeof(struct sockaddr_in));
+    sa_remote.sin_family = AF_INET;
+    sa_remote.sin_port = htons(LAIN_LOCAL_SEND_PORT);
+    sa_remote.sin_addr.s_addr = inet_addr("127.0.0.1");
+    puts("Connecting to localhost...");
+    /*if(connect(LAIN_LOCAL_SEND_SOCKET, (struct sockaddr*)&sa_remote, sizeof(struct sockaddr)) == -1) {
+        printf("Couldn't connect.\n");
+        return LAIN_RETURN_FAILURE;
+        }*/
+    
+    puts("Sending message...");
+    lain_remote_t message;
+    message.MSTATE = LAIN_COM_STATUS;
+    message.SUBSTATE = 0ul;
+    int i;
+    for(i = 0; i < 5; i++) {
+        if(sendto(LAIN_LOCAL_SEND_SOCKET, (void*)&message, sizeof(lain_remote_t), 0,
+                  (struct sockaddr*)&sa_remote, sizeof(struct sockaddr)) == -1) {
+            printf("Couldn't send message #%d.\n", i);
+            return LAIN_RETURN_FAILURE;
+        }
+    }
     
     return LAIN_RETURN_SUCCESS;
 }
@@ -117,5 +159,8 @@ unsigned lain_net_dispose(void)
         printf("Closing socket...\n");
         close(LAIN_LOCAL_SEND_SOCKET);
     }
+    lain_com_queue_clear(LAIN_REMOTE_COM_QUEUE);
+    free(LAIN_REMOTE_COM_QUEUE);
+    
     return LAIN_RETURN_SUCCESS;
 }

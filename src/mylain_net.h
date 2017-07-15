@@ -18,6 +18,7 @@
 #define MYLAIN_NET
 
 #include <pthread.h>
+#include <semaphore.h>
 #include "mylain_global.h"
 
 #define LAIN_DEFAULT_PORT      6214
@@ -29,6 +30,7 @@ extern char*     LAIN_LOCAL_IP;
 extern unsigned  LAIN_NET_READY;
 extern char*     LAIN_NET_INTERFACE;
 extern pthread_t LAIN_NET_LISTENER_THREAD;
+extern sem_t     LAIN_NET_LISTENER_SEMAPHORE;
 
 
 typedef struct LAIN_REMOTE_COM

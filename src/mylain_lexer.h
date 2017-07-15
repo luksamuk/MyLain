@@ -37,8 +37,30 @@ enum LAIN_SUBCOMMAND_CFG
     LAIN_SUBCOM_SETCFG = 2u
 };
 
+typedef struct LAIN_COM_QUEUE_NODE
+{
+    unsigned long long          com;
+    struct LAIN_COM_QUEUE_NODE* next;
+} lain_com_queue_node;
+
+typedef struct LAIN_COM_QUEUE
+{
+    lain_com_queue_node* first;
+    lain_com_queue_node* last;
+    unsigned long long   amount;
+} lain_com_queue_t;
+
+extern lain_com_queue_t* LAIN_REMOTE_COM_QUEUE;
+
+
+
 enum LAIN_COMMAND lain_get_command(const char* literal);
 unsigned          lain_dispatch(const char* literal, enum LAIN_COMMAND command);
 unsigned          lain_eval(char* command);
+
+
+void               lain_com_enqueue(lain_com_queue_t* queue, unsigned long long com);
+unsigned long long lain_com_dequeue(lain_com_queue_t* queue);
+void               lain_com_queue_clear(lain_com_queue_t* queue);
 
 #endif

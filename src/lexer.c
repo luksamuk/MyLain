@@ -19,6 +19,7 @@
 #include "mylain_common.h"
 #include "mylain_net.h"
 
+
 enum LAIN_COMMAND lain_get_command(const char* literal)
 {
     if(LAIN_MSTATE != 0ul)
@@ -46,16 +47,27 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
         return LAIN_RETURN_SUCCESS;
 
     // Connect to remote server
-    if(LAIN_CHKSTATE(LAIN_COM_CONNECT)
-       && comm == LAIN_COM_ATOM) {
-        /*printf("I'm gonna try to connect to a third-party "
-               "server now. If your connection is good, "
-               "this will most likely speed up processing "
-               "some features you may request.\n");*/
-        printf("Connecting to node at %s...\n", literal);
-        lain_reset_all();
-        return lain_net_connect(literal);
+    if(LAIN_CHKSTATE(LAIN_COM_CONNECT)) {
+        if(LAIN_NET_READY) {
+            puts("Cannot connect: already connected. Disconnect first!");
+            lain_reset_all();
+            return LAIN_RETURN_FAILURE;
+        }
+        if(comm == LAIN_COM_ATOM) {
+            /*printf("I'm gonna try to connect to a third-party "
+              "server now. If your connection is good, "
+              "this will most likely speed up processing "
+              "some features you may request.\n");*/
+            printf("Connecting to node at %s...\n", literal);
+            lain_reset_all();
+            return lain_net_connect(literal);
+        } else if(comm == LAIN_COM_END) {
+            // TODO: Connect to default node
+            lain_reset_all();
+            return lain_net_connect(NULL);
+        }
     }
+       
     
     // Get/set config
     else if(LAIN_CHKSTATE(LAIN_COM_CONFIG)) {
@@ -95,7 +107,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                         lain_reset_all();
                         return LAIN_RETURN_SUCCESS;
                     } else if(LAIN_CHKSUB(LAIN_SUBCOM_SETCFG)) {
-                        if(LAIN_NET_READY == LAIN_RETURN_SUCCESS) {
+                        if(LAIN_NET_READY) {
                             printf("Cannot change port number while connected.\n");
                             return LAIN_RETURN_FAILURE;
                         }
@@ -116,7 +128,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                         lain_reset_all();
                         return LAIN_RETURN_SUCCESS;
                     } else if(LAIN_CHKSUB(LAIN_SUBCOM_SETCFG)) {
-                        if(LAIN_NET_READY == LAIN_RETURN_SUCCESS) {
+                        if(LAIN_NET_READY) {
                             printf("Cannot change interface while connected.\n");
                             return LAIN_RETURN_FAILURE;
                         }
@@ -159,7 +171,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                        "Connected: %s\n",
                        uptime_days, uptime_hours, uptime_minutes, uptime_total,
                        LAIN_LOCAL_IP, LAIN_LOCAL_SEND_PORT,
-                       (LAIN_NET_READY == LAIN_RETURN_SUCCESS) ? "YES" : "NO");
+                       (LAIN_NET_READY) ? "YES" : "NO");
             }
             puts("TODO: Add more monitoring features.");
             lain_reset_all();
@@ -218,4 +230,50 @@ unsigned lain_eval(char* command)
     }
     cr_returnval = lain_dispatch(NULL, LAIN_COM_END);
     return cr_returnval;
+}
+
+
+
+
+
+
+void lain_com_enqueue(lain_com_queue_t* queue, unsigned long long com)
+{
+    if(!queue) return;
+
+    if(!queue->first) {
+        queue->first = malloc(sizeof(lain_com_queue_node));
+        queue->first->next = NULL;
+        queue->first->com = com;
+        queue->last = queue->first;
+        queue->amount = 1ul;
+        return;
+    }
+
+    lain_com_queue_node* aux = malloc(sizeof(lain_com_queue_node));
+    aux->com = com;
+    aux->next = NULL;
+    queue->last->next = aux;
+    queue->last = aux;
+    queue->amount++;
+}
+
+unsigned long long lain_com_dequeue(lain_com_queue_t* queue)
+{
+    if(!queue || !queue->first)
+        return LAIN_COM_END;
+
+    unsigned long long com = queue->first->com;
+    lain_com_queue_node* next = queue->first->next;
+    free(queue->first);
+    queue->first = next;
+    queue->amount--;
+    return com;
+}
+
+void lain_com_queue_clear(lain_com_queue_t* queue)
+{
+    while(queue->first != NULL)
+        lain_com_dequeue(queue);
+    queue->amount = 0ul;
 }

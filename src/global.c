@@ -23,6 +23,7 @@ unsigned long long LAIN_SUBSTATE;
 char*              LAIN_MOTTO;
 clock_t            LAIN_START_TIME;
 
+
 void lain_reset_all() {
     LAIN_SUBSTATE = 0ul;
     LAIN_MSTATE   = 0ul;
