@@ -28,19 +28,21 @@ void lain_print_help(const char* literal)
                "This cheatsheet is temporary and may change.\n\n"
 
                "GENERAL COMMANDS\n"
-               " help    -- [] Shows this prompt.\n"
-               "            [command] Shows help for said command.\n"
-               " quit    -- [] Exits MyLain.\n"
-               " exit    -- [] Exits MyLain.\n"
-               " connect -- [ipaddr:port] Connects to server running\n"
-               "            at the specified IP address and port.\n"
-               " config  -- [get field] Prints the current\n"
-               "            configuration for field.\n"
-               "            [set field] Redefines the current\n"
-               "            configuration for field.\n"
-               " status  -- [] Shows general client status. If\n"
-               "            client is connected to server, server\n"
-               "            status is fetched as well.\n\n",
+               " help     -- [] Shows this prompt.\n"
+               "             [command] Shows help for said command.\n"
+               " quit     -- [] Exits MyLain.\n"
+               " exit     -- [] Exits MyLain.\n"
+               " connect  -- [ipaddr:port] Connects to server running\n"
+               "             at the specified IP address and port.\n"
+               " config   --  [get field] Prints the current\n"
+               "             configuration for field.\n"
+               "             [set field] Redefines the current\n"
+               "             configuration for field.\n"
+               " status   -- [] Shows general client status. If\n"
+               "             client is connected to server, server\n"
+               "             status is fetched as well.\n"
+               " dispatch -- Dispatches queued subprocesses.\n"
+               "\n",
                LAIN_VERSION_MAJOR, LAIN_VERSION_MINOR, LAIN_VERSION_REV);
     else {
         if(LAIN_CHECK_LITERAL(literal, "help"))
@@ -66,6 +68,11 @@ void lain_print_help(const char* literal)
                    "Shows status of this MyLain client, and shows "
                    "status of the server and/or the Lain network, if "
                    "connected.\n");
+        }
+        else if(LAIN_CHECK_LITERAL(literal, "dispatch")) {
+            printf("command: dispatch\n"
+                   "Dispatches subprocesses which were queued by "
+                   "remote requests.\n");
         }
         else {
             printf("Sorry, no help for this command right now...\n");

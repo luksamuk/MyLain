@@ -46,20 +46,6 @@ int main(int argc, char** argv)
     LAIN_START_TIME = clock();
     
     while(LAIN_LOCAL_RUNNING) {
-        // Dispatch queued commands
-        if(!LAIN_MSTATE && !LAIN_SUBSTATE) {
-            sem_wait(&LAIN_NET_LISTENER_SEMAPHORE);
-            while(LAIN_REMOTE_COM_QUEUE->first != NULL) {
-                unsigned long long com = lain_com_dequeue(LAIN_REMOTE_COM_QUEUE);
-                printf("lain_dispatch{0x%08llX}\n", com);
-                LAIN_MSTATE |= com;
-                lain_dispatch(NULL, com);
-                lain_dispatch(NULL, LAIN_COM_END);
-                lain_reset_all();
-            }
-            sem_post(&LAIN_NET_LISTENER_SEMAPHORE);
-        }
-        
         // Get our own commands
         if(LAIN_REMOTE_COM_QUEUE->amount > 0ul)
             printf("[%llu] ", LAIN_REMOTE_COM_QUEUE->amount);

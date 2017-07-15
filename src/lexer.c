@@ -36,6 +36,8 @@ enum LAIN_COMMAND lain_get_command(const char* literal)
         return LAIN_COM_HELP;
     else if(LAIN_CHECK_LITERAL(literal, "status"))
         return LAIN_COM_STATUS;
+    else if(LAIN_CHECK_LITERAL(literal, "dispatch"))
+        return LAIN_COM_DISPATCH;
     
     return LAIN_COM_ATOM;
 }
@@ -143,8 +145,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                     return LAIN_RETURN_FAILURE;
                 }
             }
-        } else if(comm == LAIN_COM_END
-            && LAIN_SUBSTATE == 0ul) {
+        } else if(comm == LAIN_COM_END && LAIN_SUBSTATE == 0ul) {
             lain_print_configfields();
             lain_reset_all();
             return LAIN_RETURN_SUCCESS;
@@ -196,6 +197,28 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
             lain_reset_all();
             return LAIN_RETURN_NOT_IMPLEMENTED;
         }
+    }
+
+    else if(LAIN_CHKSTATE(LAIN_COM_DISPATCH)) {
+        lain_reset_all();
+        unsigned sub_ret_val;
+        // Dispatch queued commands
+        sem_wait(&LAIN_NET_LISTENER_SEMAPHORE);
+        while(LAIN_REMOTE_COM_QUEUE->first != NULL) {
+            unsigned long long com = lain_com_dequeue(LAIN_REMOTE_COM_QUEUE);
+            printf("!lain_dispatch{0x%08llX}\n", com);
+            LAIN_MSTATE |= com;
+            sub_ret_val = lain_dispatch(NULL, com);
+            if(sub_ret_val == LAIN_RETURN_ONGOING)
+                sub_ret_val = lain_dispatch(NULL, LAIN_COM_END);
+            lain_reset_all();
+            if(sub_ret_val == LAIN_RETURN_SUCCESS)
+                puts("!sub_ans{Ok}");
+            else printf("!ans{Err:0x%08X}\n", sub_ret_val);
+        }
+        sem_post(&LAIN_NET_LISTENER_SEMAPHORE);
+        
+        return LAIN_RETURN_SUCCESS;
     }
     
     return LAIN_RETURN_ONGOING;

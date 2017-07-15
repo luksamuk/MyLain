@@ -22,19 +22,20 @@
 
 enum LAIN_COMMAND
 {
-    LAIN_COM_ATOM    = 0u,
-    LAIN_COM_QUIT    = 1u,
-    LAIN_COM_CONNECT = 2u,
-    LAIN_COM_CONFIG  = 4u,
-    LAIN_COM_HELP    = 8u,
-    LAIN_COM_END     = 16u,
-    LAIN_COM_STATUS  = 32u,
+    LAIN_COM_ATOM     = 0llu,
+    LAIN_COM_QUIT     = 1llu,
+    LAIN_COM_CONNECT  = 2llu,
+    LAIN_COM_CONFIG   = 4llu,
+    LAIN_COM_HELP     = 8llu,
+    LAIN_COM_END      = 16llu,
+    LAIN_COM_STATUS   = 32llu,
+    LAIN_COM_DISPATCH = 64llu
 };
 
 enum LAIN_SUBCOMMAND_CFG
 {
-    LAIN_SUBCOM_GETCFG = 1u,
-    LAIN_SUBCOM_SETCFG = 2u
+    LAIN_SUBCOM_GETCFG = 1llu,
+    LAIN_SUBCOM_SETCFG = 2llu
 };
 
 typedef struct LAIN_COM_QUEUE_NODE
