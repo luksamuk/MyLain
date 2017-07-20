@@ -1,3 +1,4 @@
+
 /******************************************************************
  *  Copyright (c) 2017 Lucas Vieira <lucas.samuel2002@gmail.com>  *
  *  This file is part of MyLain.                                  *
@@ -28,23 +29,27 @@ void lain_print_help(const char* literal)
                "This cheatsheet is temporary and may change.\n\n"
 
                "GENERAL COMMANDS\n"
-               " help     -- [] Shows this prompt.\n"
-               "             [command] Shows help for said command.\n"
-               " quit     -- [] Exits MyLain.\n"
-               " exit     -- [] Exits MyLain.\n"
-               " connect  -- [ipaddr:port] Connects to server running\n"
-               "             at the specified IP address and port.\n"
-               " config   --  [get field] Prints the current\n"
-               "             configuration for field.\n"
-               "             [set field] Redefines the current\n"
-               "             configuration for field.\n"
-               " status   -- [] Shows general client status. If\n"
-               "             client is connected to server, server\n"
-               "             status is fetched as well.\n"
-               " dispatch -- Dispatches queued subprocesses.\n"
+               "help     -- [] Shows this prompt.\n"
+               "            [command] Shows help for said command.\n"
+               "quit     -- [] Exits MyLain.\n"
+               "exit     -- [] Exits MyLain.\n"
+               "connect  -- [ipaddr:port] Connects to server running\n"
+               "            at the specified IP address and port.\n"
+               "config   -- [get field] Prints the current\n"
+               "            configuration for field.\n"
+               "            [set field] Redefines the current\n"
+               "            configuration for field.\n"
+               "status   -- [] Shows general client status. If\n"
+               "            client is connected to server, server\n"
+               "            status is fetched as well.\n"
+               "dispatch -- Dispatches queued subprocesses.\n"
+               "printext -- Prints next sequence of atoms as a \n"
+               "            continuous string.\n"
                "\n",
                LAIN_VERSION_MAJOR, LAIN_VERSION_MINOR, LAIN_VERSION_REV);
     else {
+        // TODO: We should just obtain the command already instead of
+        // checking, eh? We already have a function for that.
         if(LAIN_CHECK_LITERAL(literal, "help"))
             printf("command: help [command]\n"
                    "Shows help prompt for command. If no command was "
@@ -73,6 +78,10 @@ void lain_print_help(const char* literal)
             printf("command: dispatch\n"
                    "Dispatches subprocesses which were queued by "
                    "remote requests.\n");
+        }
+        else if(LAIN_CHECK_LITERAL(literal, "printext")) {
+            printf("command: printext [atoms]\n"
+                   "Prints all atoms following the command.\n");
         }
         else {
             printf("Sorry, no help for this command right now...\n");

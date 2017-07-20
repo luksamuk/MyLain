@@ -29,7 +29,8 @@ enum LAIN_COMMAND
     LAIN_COM_HELP     = 8llu,
     LAIN_COM_END      = 16llu,
     LAIN_COM_STATUS   = 32llu,
-    LAIN_COM_DISPATCH = 64llu
+    LAIN_COM_DISPATCH = 64llu,
+    LAIN_COM_PRINTEXT = 128llu,
 };
 
 enum LAIN_SUBCOMMAND_CFG

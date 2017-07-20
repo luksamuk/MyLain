@@ -38,6 +38,8 @@ enum LAIN_COMMAND lain_get_command(const char* literal)
         return LAIN_COM_STATUS;
     else if(LAIN_CHECK_LITERAL(literal, "dispatch"))
         return LAIN_COM_DISPATCH;
+    else if(LAIN_CHECK_LITERAL(literal, "printext"))
+        return LAIN_COM_PRINTEXT;
     
     return LAIN_COM_ATOM;
 }
@@ -102,7 +104,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                     }
                 }
 
-                // Get/set localpprt
+                // Get/set localport
                 else if(LAIN_CHECK_LITERAL(literal, "localport")) {
                     if(LAIN_CHKSUB(LAIN_SUBCOM_GETCFG)) {
                         printf("%u\n", LAIN_LOCAL_SEND_PORT);
@@ -199,6 +201,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
         }
     }
 
+    // Dispatch pending
     else if(LAIN_CHKSTATE(LAIN_COM_DISPATCH)) {
         lain_reset_all();
         unsigned sub_ret_val;
@@ -219,6 +222,17 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
         sem_post(&LAIN_NET_LISTENER_SEMAPHORE);
         
         return LAIN_RETURN_SUCCESS;
+    }
+
+    // Print text
+    else if(LAIN_CHKSTATE(LAIN_COM_PRINTEXT)) {
+        if(comm == LAIN_COM_ATOM) {
+            printf("%s ", literal);
+        } else if(comm == LAIN_COM_END) {
+            puts("");
+            lain_reset_all();
+            return LAIN_RETURN_SUCCESS;
+        }
     }
     
     return LAIN_RETURN_ONGOING;
