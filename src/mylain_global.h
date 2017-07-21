@@ -20,8 +20,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <readline/readline.h>
-#include <readline/history.h>
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -29,6 +27,14 @@
 #include <assert.h>
 #include <time.h>
 #include <math.h>
+
+#ifndef LAIN_NO_READLINE
+#include <readline/readline.h>
+#include <readline/history.h>
+#else
+char*       readline(char* prompt);
+void        add_history(char* unused);
+#endif
 
 #ifndef LAIN_VERSION_EXTERN
 #define LAIN_VERSION_MAJOR 0

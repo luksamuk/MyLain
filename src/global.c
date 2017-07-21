@@ -16,6 +16,21 @@
 
 #include "mylain_global.h"
 
+#ifdef LAIN_NO_READLINE
+static char INPUT_BUFFER[2048];
+
+char* readline(char* prompt) {
+    fputs(prompt, stdout);
+    fgets(INPUT_BUFFER, 2048, stdin);
+    char* cpy = malloc(strlen(INPUT_BUFFER) + 1);
+    strcpy(cpy, INPUT_BUFFER);
+    cpy[strlen(cpy) - 1] = '\0';
+    return cpy;
+}
+
+void add_history(char* unused) {}
+#endif
+
 unsigned           LAIN_LOCAL_RUNNING;
 char*              LAIN_LOCAL_USER;
 unsigned long long LAIN_MSTATE;
