@@ -22,7 +22,7 @@
 #include "global.h"
 
 #define LAIN_DEFAULT_PORT      6214
-#define LAIN_DEFAULT_INTERFACE "eth0"
+#define LAIN_DEFAULT_INTERFACE "wlp3s0"
 
 extern unsigned  LAIN_LOCAL_SEND_PORT;
 extern int       LAIN_LOCAL_SEND_SOCKET;

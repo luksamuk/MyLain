@@ -238,37 +238,6 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
     return LAIN_RETURN_ONGOING;
 }
 
-unsigned lain_eval(char* command)
-{
-    char* cr_literal = strtok(command, " ");
-    unsigned cr_returnval = LAIN_RETURN_FAILURE;
-    while(cr_literal != NULL) {
-        enum LAIN_COMMAND comm = lain_get_command(cr_literal);
-        
-        switch(comm) {
-        case LAIN_COM_QUIT:
-            LAIN_LOCAL_RUNNING = 0u;
-            cr_returnval = LAIN_RETURN_SUCCESS;
-            break;
-            
-        case LAIN_COM_ATOM:
-            if(!LAIN_MSTATE) {
-                printf("atom{%s}\n", cr_literal);
-            }
-            break;
-
-        default:
-            LAIN_MSTATE |= comm;
-            break;
-        };
-
-        cr_returnval = lain_dispatch(cr_literal, comm);
-        cr_literal = strtok(NULL, " ");
-    }
-    cr_returnval = lain_dispatch(NULL, LAIN_COM_END);
-    return cr_returnval;
-}
-
 
 
 

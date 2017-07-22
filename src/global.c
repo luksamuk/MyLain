@@ -15,6 +15,7 @@
 
 
 #include "mylain/global.h"
+#include "mylain/net.h"
 
 #ifdef LAIN_NO_READLINE
 static char INPUT_BUFFER[2048];
@@ -46,4 +47,55 @@ void lain_reset_all() {
 
 void lain_reset_sub() {
     LAIN_SUBSTATE = 0ul;
+}
+
+void lain_init()
+{
+    // Reset all states
+    lain_reset_all();
+    LAIN_LOCAL_RUNNING = LAIN_RETURN_FAILURE;
+
+    // Initial configuration loading/definition
+    // Motto
+    LAIN_MOTTO    = malloc(strlen(LAIN_DEFAULT_MOTTO) * sizeof(char));
+    strcpy(LAIN_MOTTO, LAIN_DEFAULT_MOTTO);
+
+    // Get and show username
+    {
+        const struct passwd* pass = getpwuid(getuid());
+        if(pass != NULL) {
+            LAIN_LOCAL_USER = malloc(strlen(pass->pw_name) * sizeof(char));
+            strcpy(LAIN_LOCAL_USER, pass->pw_name);
+        } else {
+            LAIN_LOCAL_USER = malloc(strlen("user") * sizeof(char));
+            strcpy(LAIN_LOCAL_USER, "user");
+        }
+    }
+    printf("Hello, %s!\n", LAIN_LOCAL_USER);
+
+    
+    puts("Initializing core modules...");
+    
+    // Initialize networking
+    printf("networking ............. ");
+    assert(lain_net_setup() == LAIN_RETURN_SUCCESS);
+    puts("OK");
+
+    printf("timing     ............. ");
+    LAIN_START_TIME = clock();
+    puts("OK");
+}
+
+void lain_stop()
+{
+    // Dispose common stuff
+    free(LAIN_MOTTO);
+    free(LAIN_LOCAL_USER);
+
+    // Dispose modules
+    puts("Disposing core modules...");
+
+    printf("networking ............. ");
+    assert(lain_net_dispose() == LAIN_RETURN_SUCCESS);
+    puts("OK");
 }

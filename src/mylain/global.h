@@ -42,6 +42,8 @@ void        add_history(char* unused);
 #define LAIN_VERSION_REV   1
 #endif
 
+#define LAIN_DEFAULT_MOTTO "Close this world. Open the next."
+
 #define LAIN_RETURN_SUCCESS 0u
 #define LAIN_RETURN_FAILURE 1u
 #define LAIN_RETURN_ONGOING 2u
@@ -57,5 +59,8 @@ extern clock_t            LAIN_START_TIME;
 
 void lain_reset_all();
 void lain_reset_sub();
+
+void lain_init();
+void lain_stop();
 
 #endif

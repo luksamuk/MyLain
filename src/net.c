@@ -86,9 +86,8 @@ void* lain_net_listener_loop(void* unused)
         
     }
 
-    printf("Finishing thread.\n");
     // Properly kill thread
-    //pthread_exit(NULL);
+    pthread_exit(NULL);
     return NULL; // Avoid warnings
 }
 
@@ -155,9 +154,11 @@ unsigned lain_net_connect(const char* address)
 
 unsigned lain_net_dispose(void)
 {
+    // Join thread
+    pthread_join(LAIN_NET_LISTENER_THREAD, NULL);
+    
     if(LAIN_LOCAL_SEND_SOCKET != -1) {
-        printf("Closing socket...\n");
-        close(LAIN_LOCAL_SEND_SOCKET);
+        assert(close(LAIN_LOCAL_SEND_SOCKET) != -1);
     }
     lain_com_queue_clear(LAIN_REMOTE_COM_QUEUE);
     free(LAIN_REMOTE_COM_QUEUE);

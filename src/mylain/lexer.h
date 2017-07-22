@@ -58,7 +58,6 @@ extern lain_com_queue_t* LAIN_REMOTE_COM_QUEUE;
 
 enum LAIN_COMMAND lain_get_command(const char* literal);
 unsigned          lain_dispatch(const char* literal, enum LAIN_COMMAND command);
-unsigned          lain_eval(char* command);
 
 
 void               lain_com_enqueue(lain_com_queue_t* queue, unsigned long long com);

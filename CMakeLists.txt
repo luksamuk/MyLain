@@ -25,13 +25,15 @@ set(MYLAIN_SOURCES
   src/global.c
   src/lexer.c
   src/common.c
-  src/net.c)
+  src/net.c
+  src/repl.c)
 
 set(MYLAIN_HEADERS
   src/mylain/global.h
   src/mylain/lexer.h
   src/mylain/common.h
-  src/mylain/net.h)
+  src/mylain/net.h
+  src/mylain/repl.h)
 
 add_executable(mylain ${MYLAIN_SOURCES} ${MYLAIN_HEADERS})
 target_link_libraries(mylain m pthread)

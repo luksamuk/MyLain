@@ -13,28 +13,10 @@
  *  <http://www.gnu.org/licenses/>.                               *
  ******************************************************************/
 
+#ifndef MYLAIN_REPL
+#define MYLAIN_REPL
 
-#include "mylain/global.h"
-#include "mylain/net.h"
-#include "mylain/repl.h"
+void     lain_repl(void);
+unsigned lain_eval(char* command);
 
-
-int main(int argc, char** argv)
-{ 
-    printf("MyLain v%u.%u.%u\n",
-           LAIN_VERSION_MAJOR,
-           LAIN_VERSION_MINOR,
-           LAIN_VERSION_REV);
-
-    // Initialize modules
-    lain_init();
-    
-    // Run REPL
-    lain_repl();
-
-    // Dispose all
-    lain_stop();
-
-    puts("MyLain client halted. Downgrading to reality.");
-    return 0;
-}
+#endif
