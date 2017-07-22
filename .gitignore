@@ -71,3 +71,9 @@ GTAGS
 
 # Visual Studio Code stuff
 .vscode/.cmaketools.json
+
+
+*.swp
+*#*#
+*.#*
+*~
