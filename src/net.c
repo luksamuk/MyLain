@@ -13,9 +13,9 @@
  *  <http://www.gnu.org/licenses/>.                               *
  ******************************************************************/
 
-#include "mylain_net.h"
-#include "mylain_global.h"
-#include "mylain_lexer.h"
+#include "mylain/net.h"
+#include "mylain/global.h"
+#include "mylain/lexer.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>

@@ -14,9 +14,9 @@
  ******************************************************************/
 
 
-#include "mylain_global.h"
-#include "mylain_lexer.h"
-#include "mylain_net.h"
+#include "mylain/global.h"
+#include "mylain/lexer.h"
+#include "mylain/net.h"
 
 
 int main(int argc, char** argv)

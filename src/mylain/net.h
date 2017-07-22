@@ -19,7 +19,7 @@
 
 #include <pthread.h>
 #include <semaphore.h>
-#include "mylain_global.h"
+#include "global.h"
 
 #define LAIN_DEFAULT_PORT      6214
 #define LAIN_DEFAULT_INTERFACE "eth0"

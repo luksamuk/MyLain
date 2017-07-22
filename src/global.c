@@ -14,7 +14,7 @@
  ******************************************************************/
 
 
-#include "mylain_global.h"
+#include "mylain/global.h"
 
 #ifdef LAIN_NO_READLINE
 static char INPUT_BUFFER[2048];
