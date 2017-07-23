@@ -104,7 +104,7 @@ unsigned lain_net_connect(const char* address)
         sa_local_send.sin_addr.s_addr =  INADDR_ANY;
         assert(bind(LAIN_LOCAL_SEND_SOCKET, (struct sockaddr*)&sa_local_send, sizeof(struct sockaddr)) != -1);
 
-        printf("Currently listening on port %u.\n", LAIN_LOCAL_RECV_PORT);
+        printf("Currently listening to port %u.\n", LAIN_LOCAL_RECV_PORT);
         
     
         // Setup remote server
@@ -265,7 +265,8 @@ unsigned lain_net_dispatch_atom(const char* atom)
         message.SUBSTATE = strlen(atom);
         if(send(LAIN_LOCAL_SEND_SOCKET, (void*)&message, sizeof(lain_remote_t), 0) < 0)
             return LAIN_RETURN_FAILURE;
-        if(write(LAIN_LOCAL_SEND_SOCKET, atom, strlen(atom)) < 0)
+        //if(write(LAIN_LOCAL_SEND_SOCKET, atom, strlen(atom)) < 0)
+        if(send(LAIN_LOCAL_SEND_SOCKET, (void*)atom, strlen(atom) * sizeof(char), 0) < 0)
             return LAIN_RETURN_FAILURE;
         return LAIN_RETURN_SUCCESS;
     }
