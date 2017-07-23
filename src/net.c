@@ -166,7 +166,6 @@ unsigned lain_net_dispose(void)
         assert(close(LAIN_LOCAL_RECV_SOCKET) != -1);
 
     // Join thread
-    puts("Joining thread...");
     pthread_join(LAIN_NET_LISTENER_THREAD, NULL);
     
     lain_com_queue_clear(LAIN_REMOTE_COM_QUEUE);
