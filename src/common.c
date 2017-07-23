@@ -93,9 +93,11 @@ void lain_print_configfields(void)
 {
     printf("GENERAL CONFIGURATION\n"
            "motto      -- \"%s\"\n"
-           "localport  -- %u\n"
+           "sendport   -- %u\n"
+           "recvport   -- %u\n"
            "interface  -- %s\n",
            LAIN_MOTTO,
            LAIN_LOCAL_SEND_PORT,
+           LAIN_LOCAL_RECV_PORT,
            LAIN_NET_INTERFACE);
 }

@@ -21,11 +21,14 @@
 #include <semaphore.h>
 #include "global.h"
 
-#define LAIN_DEFAULT_PORT      6214
+#define LAIN_DEFAULT_SEND_PORT 6714
+#define LAIN_DEFAULT_RECV_PORT 6715
 #define LAIN_DEFAULT_INTERFACE "wlp3s0"
 
 extern unsigned  LAIN_LOCAL_SEND_PORT;
+extern unsigned  LAIN_LOCAL_RECV_PORT;
 extern int       LAIN_LOCAL_SEND_SOCKET;
+extern int       LAIN_LOCAL_RECV_SOCKET;
 extern char*     LAIN_LOCAL_IP;
 extern unsigned  LAIN_NET_READY;
 extern char*     LAIN_NET_INTERFACE;
