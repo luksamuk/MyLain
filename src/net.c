@@ -262,11 +262,11 @@ unsigned lain_net_dispatch_atom(const char* atom)
     if(LAIN_NET_READY) {
         lain_remote_t message;
         message.MSTATE   = LAIN_COM_ATOM;
-        message.SUBSTATE = strlen(atom);
+        message.SUBSTATE = strlen(atom) + 1;
         if(send(LAIN_LOCAL_SEND_SOCKET, (void*)&message, sizeof(lain_remote_t), 0) < 0)
             return LAIN_RETURN_FAILURE;
         //if(write(LAIN_LOCAL_SEND_SOCKET, atom, strlen(atom)) < 0)
-        if(send(LAIN_LOCAL_SEND_SOCKET, (void*)atom, strlen(atom) * sizeof(char), 0) < 0)
+        if(send(LAIN_LOCAL_SEND_SOCKET, (void*)atom, (strlen(atom) + 1) * sizeof(char), 0) < 0)
             return LAIN_RETURN_FAILURE;
         return LAIN_RETURN_SUCCESS;
     }
