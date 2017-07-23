@@ -76,7 +76,7 @@ unsigned lain_net_setup(void)
     assert(listen(LAIN_LOCAL_RECV_SOCKET, 10) != -1);
     
     // Set it to nonblocking mode
-    assert(fcntl(LAIN_LOCAL_RECV_SOCKET, F_SETFL, O_NONBLOCK, 1) != -1);
+    assert(fcntl(LAIN_LOCAL_RECV_SOCKET, F_SETFL, O_NONBLOCK) != -1);
 
     // Initialize listener thread
     assert(pthread_create(&LAIN_NET_LISTENER_THREAD, NULL, lain_net_listener_loop, NULL) == 0);
@@ -166,6 +166,7 @@ unsigned lain_net_dispose(void)
         assert(close(LAIN_LOCAL_RECV_SOCKET) != -1);
 
     // Join thread
+    puts("Joining thread...");
     pthread_join(LAIN_NET_LISTENER_THREAD, NULL);
     
     lain_com_queue_clear(LAIN_REMOTE_COM_QUEUE);
@@ -194,8 +195,13 @@ void* lain_net_listener_loop(void* unused)
         socklen_t       fromsz;
 
         // Accept incoming connection
-        if(client_sock < 0)
+        if(client_sock < 0) {
             client_sock = accept(LAIN_LOCAL_RECV_SOCKET, &from, &fromsz);
+            if(client_sock >= 0) {
+                // Set client socket to nonblocking mode
+                assert(fcntl(client_sock, F_SETFL, O_NONBLOCK) != -1);
+            }
+        }
         else {
             if(!LAIN_LOCAL_RUNNING)
                 break;
@@ -213,7 +219,7 @@ void* lain_net_listener_loop(void* unused)
                 // Or write a string
                 //write(client_sock, msg_string, strlen(msg_string));
             } else if(bytes_read == 0) {
-                puts("Client disconnected.");
+                client_sock = -1;
                 // Client disconnected
                 // TODO: print disconnection
             } else { /* recv failed */ }

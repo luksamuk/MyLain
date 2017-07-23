@@ -77,11 +77,11 @@ void lain_init()
     puts("Initializing core modules...");
     
     // Initialize networking
-    printf("networking ............. ");
+    printf("networking ............. "); fflush(stdout);
     assert(lain_net_setup() == LAIN_RETURN_SUCCESS);
     puts("OK");
 
-    printf("timing     ............. ");
+    printf("timing     ............. "); fflush(stdout);
     LAIN_START_TIME = clock();
     puts("OK");
 }
@@ -95,7 +95,7 @@ void lain_stop()
     // Dispose modules
     puts("Disposing core modules...");
 
-    printf("networking ............. ");
+    printf("networking ............. "); fflush(stdout);
     assert(lain_net_dispose() == LAIN_RETURN_SUCCESS);
     puts("OK");
 }
