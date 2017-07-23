@@ -213,6 +213,7 @@ void* lain_net_listener_loop(void* unused)
                 // Or write a string
                 //write(client_sock, msg_string, strlen(msg_string));
             } else if(bytes_read == 0) {
+                puts("Client disconnected.");
                 // Client disconnected
                 // TODO: print disconnection
             } else { /* recv failed */ }
