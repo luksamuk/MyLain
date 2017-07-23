@@ -52,11 +52,12 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
 
     // Connect to remote server
     if(LAIN_CHKSTATE(LAIN_COM_CONNECT)) {
-        if(LAIN_NET_READY) {
+        // Disabling this for now.
+        /*if(LAIN_NET_READY) {
             puts("Cannot connect: already connected. Disconnect first!");
             lain_reset_all();
             return LAIN_RETURN_FAILURE;
-        }
+        }*/
         if(comm == LAIN_COM_ATOM) {
             /*printf("I'm gonna try to connect to a third-party "
               "server now. If your connection is good, "
@@ -104,8 +105,8 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                     }
                 }
 
-                // Get/set localport
-                else if(LAIN_CHECK_LITERAL(literal, "localport")) {
+                // Get/set local ports
+                else if(LAIN_CHECK_LITERAL(literal, "sendport")) {
                     if(LAIN_CHKSUB(LAIN_SUBCOM_GETCFG)) {
                         printf("%u\n", LAIN_LOCAL_SEND_PORT);
                         lain_reset_all();
@@ -118,8 +119,27 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                         char* newports = readline("Input new port number: ");
                         unsigned newport = strtoul(newports, NULL, 10);
                         free(newports);
-                        printf("Changing port to %u...\n", newport);
+                        printf("Changing sending port to %u...\n", newport);
                         LAIN_LOCAL_SEND_PORT = newport;
+                        lain_reset_all();
+                        return LAIN_RETURN_SUCCESS;
+                    }
+                }
+                else if(LAIN_CHECK_LITERAL(literal, "recvport")) {
+                    if(LAIN_CHKSUB(LAIN_SUBCOM_GETCFG)) {
+                        printf("%u\n", LAIN_LOCAL_RECV_PORT);
+                        lain_reset_all();
+                        return LAIN_RETURN_SUCCESS;
+                    } else if(LAIN_CHKSUB(LAIN_SUBCOM_SETCFG)) {
+                        if(LAIN_NET_READY) {
+                            printf("Cannot change port number while connected.\n");
+                            return LAIN_RETURN_FAILURE;
+                        }
+                        char* newports = readline("Input new port number: ");
+                        unsigned newport = strtoul(newports, NULL, 10);
+                        free(newports);
+                        printf("Changing receive port to %u...\n", newport);
+                        LAIN_LOCAL_RECV_PORT = newport;
                         lain_reset_all();
                         return LAIN_RETURN_SUCCESS;
                     }
@@ -170,10 +190,10 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                 modf((uptime_total / 60.0), &uptime_minutes);
                 uptime_total -= uptime_minutes * 60.0;
                 printf("Uptime: %0.0lfd %0.0lfh %02.0lfm %02.0lfs\n"
-                       "Local address: %s:%u\n"
+                       "Local address: %s\n"
                        "Connected: %s\n",
                        uptime_days, uptime_hours, uptime_minutes, uptime_total,
-                       LAIN_LOCAL_IP, LAIN_LOCAL_SEND_PORT,
+                       LAIN_LOCAL_IP,
                        (LAIN_NET_READY) ? "YES" : "NO");
             }
             puts("TODO: Add more monitoring features.");
