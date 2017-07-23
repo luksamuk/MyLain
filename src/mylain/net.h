@@ -47,5 +47,6 @@ unsigned lain_net_setup(void);
 unsigned lain_net_connect(const char* address);
 unsigned lain_net_dispose(void);
 void*    lain_net_listener_loop(void* unused);
+void     lain_net_fetch_ip(void);
 
 #endif

@@ -78,6 +78,9 @@ unsigned lain_net_setup(void)
     // Set it to nonblocking mode
     assert(fcntl(LAIN_LOCAL_RECV_SOCKET, F_SETFL, O_NONBLOCK) != -1);
 
+    // Fetch IP address
+    lain_net_fetch_ip();
+
     // Initialize listener thread
     assert(pthread_create(&LAIN_NET_LISTENER_THREAD, NULL, lain_net_listener_loop, NULL) == 0);
     
@@ -93,17 +96,6 @@ unsigned lain_net_connect(const char* address)
         //LAIN_LOCAL_SEND_SOCKET = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         LAIN_LOCAL_SEND_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
         assert(LAIN_LOCAL_SEND_SOCKET != -1);
-
-        struct ifreq ifr;
-        printf("Requesting IPv4 address to interface %s...\n", LAIN_NET_INTERFACE);
-        ifr.ifr_addr.sa_family = AF_INET;
-        strncpy(ifr.ifr_name, LAIN_NET_INTERFACE, IFNAMSIZ-1);
-        ioctl(LAIN_LOCAL_SEND_SOCKET, SIOCGIFADDR, &ifr);
-
-        // Fetch local IP
-        free(LAIN_LOCAL_IP);
-        LAIN_LOCAL_IP = malloc(INET_ADDRSTRLEN * sizeof(char));
-        inet_ntop(AF_INET, &((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr, LAIN_LOCAL_IP, INET_ADDRSTRLEN);
 
         // Bind local IP and port
         memset(&sa_local_send, 0, sizeof(struct sockaddr_in));
@@ -236,4 +228,19 @@ void* lain_net_listener_loop(void* unused)
     // Properly kill thread
     pthread_exit(NULL);
     return NULL; // Avoid warnings
+}
+
+void lain_net_fetch_ip(void)
+{
+    assert(LAIN_LOCAL_RECV_SOCKET != -1);
+    struct ifreq ifr;
+    
+    ifr.ifr_addr.sa_family = AF_INET;
+    strncpy(ifr.ifr_name, LAIN_NET_INTERFACE, IFNAMSIZ-1);
+    ioctl(LAIN_LOCAL_RECV_SOCKET, SIOCGIFADDR, &ifr);
+        
+    // Fetch local IP
+    free(LAIN_LOCAL_IP);
+    LAIN_LOCAL_IP = malloc(INET_ADDRSTRLEN * sizeof(char));
+    inet_ntop(AF_INET, &((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr, LAIN_LOCAL_IP, INET_ADDRSTRLEN);
 }

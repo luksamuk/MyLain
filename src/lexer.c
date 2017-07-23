@@ -157,6 +157,8 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
                             return LAIN_RETURN_FAILURE;
                         }
                         LAIN_NET_INTERFACE = readline("Input new interface name: ");
+                        printf("Requesting IPv4 address to interface %s...\n", LAIN_NET_INTERFACE);
+                        lain_net_fetch_ip();
                         lain_reset_all();
                         return LAIN_RETURN_SUCCESS;
                     }
