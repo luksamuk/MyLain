@@ -123,42 +123,30 @@ unsigned lain_net_connect(const char* address)
         LAIN_NET_READY = 1;
     }
     
-    puts("Sending message...");
-    lain_remote_t message;
-    message.MSTATE = LAIN_COM_STATUS;
-    message.SUBSTATE = 0ul;
-    
-    
-    int i;
-    for(i = 0; i < 1; i++) {
-        printf("Sending message #%d...\n", i);
-        if(send(LAIN_LOCAL_SEND_SOCKET, (void*)&message, sizeof(lain_remote_t), 0) < 0) {
-            printf("Couldn't send message #%d.\n", i);
-            return LAIN_RETURN_FAILURE;
-        }
-        // We can actually receive replies from server here too.
-        // Just use
-        //recv(socket, savebuffer, size, flags)
-    }
+    puts("Sending message #1: Request printing status...");
+    lain_net_dispatch_com(LAIN_COM_STATUS);
+    lain_net_dispatch_com(LAIN_COM_END);
 
-    // Shut down connection
-    puts("Closing connection...");
-    if(send(LAIN_LOCAL_SEND_SOCKET, NULL, 0, 0) < 0) {
-        puts("Couldn't send close message.");
-    }
+    puts("Sending message #2: Request printing motto...");
+    lain_net_dispatch_com(LAIN_COM_CONFIG);
+    lain_net_dispatch_atom("get");
+    lain_net_dispatch_atom("motto");
+    lain_net_dispatch_com(LAIN_COM_END);
     
     return LAIN_RETURN_SUCCESS;
 }
 
 unsigned lain_net_dispose(void)
 {
+    // Join thread
+    pthread_join(LAIN_NET_LISTENER_THREAD, NULL);
+    
     if(LAIN_LOCAL_SEND_SOCKET != -1)
         assert(close(LAIN_LOCAL_SEND_SOCKET) != -1);
     if(LAIN_LOCAL_RECV_SOCKET != -1)
         assert(close(LAIN_LOCAL_RECV_SOCKET) != -1);
 
-    // Join thread
-    pthread_join(LAIN_NET_LISTENER_THREAD, NULL);
+    LAIN_NET_READY = 0;
     
     lain_com_queue_clear(LAIN_REMOTE_COM_QUEUE);
     free(LAIN_REMOTE_COM_QUEUE);
@@ -200,10 +188,21 @@ void* lain_net_listener_loop(void* unused)
             // TODO: Print connection
             int bytes_read = recv(client_sock, &remote_com, sizeof(lain_remote_t), 0);
             if(bytes_read > 0) {
-                // Process machine state
-                sem_wait(&LAIN_NET_LISTENER_SEMAPHORE);
-                lain_com_enqueue(LAIN_REMOTE_COM_QUEUE, remote_com.MSTATE);
-                sem_post(&LAIN_NET_LISTENER_SEMAPHORE);
+                if(((enum LAIN_COMMAND)remote_com.MSTATE) == LAIN_COM_ATOM) {
+                    char* buffer = malloc(remote_com.SUBSTATE * sizeof(char));
+                    recv(client_sock, buffer, remote_com.SUBSTATE * sizeof(char), 0);
+                    // ... Then I need to do something to that buffer.
+                    // for now I'll just free it.
+                    //free(buffer);
+                    sem_wait(&LAIN_NET_LISTENER_SEMAPHORE);
+                    lain_com_enqueue_atom(LAIN_REMOTE_COM_QUEUE, buffer);
+                    sem_post(&LAIN_NET_LISTENER_SEMAPHORE);
+                } else {
+                    // Process machine state
+                    sem_wait(&LAIN_NET_LISTENER_SEMAPHORE);
+                    lain_com_enqueue(LAIN_REMOTE_COM_QUEUE, remote_com.MSTATE);
+                    sem_post(&LAIN_NET_LISTENER_SEMAPHORE);
+                }
                 // Answer
                 //unsigned ans = LAIN_RETURN_SUCCESS;
                 //send(client_sock, &ans, sizeof(ans), 0);
@@ -243,4 +242,32 @@ void lain_net_fetch_ip(void)
     free(LAIN_LOCAL_IP);
     LAIN_LOCAL_IP = malloc(INET_ADDRSTRLEN * sizeof(char));
     inet_ntop(AF_INET, &((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr, LAIN_LOCAL_IP, INET_ADDRSTRLEN);
+}
+
+unsigned lain_net_dispatch_com(unsigned long long command)
+{
+    if(LAIN_NET_READY) {
+        lain_remote_t message;
+        message.MSTATE = command;
+        message.SUBSTATE = 0ul;
+        if(send(LAIN_LOCAL_SEND_SOCKET, (void*)&message, sizeof(lain_remote_t), 0) < 0)
+            return LAIN_RETURN_FAILURE;
+        return LAIN_RETURN_SUCCESS;
+    }
+    return LAIN_RETURN_FAILURE;
+}
+
+unsigned lain_net_dispatch_atom(const char* atom)
+{
+    if(LAIN_NET_READY) {
+        lain_remote_t message;
+        message.MSTATE   = LAIN_COM_ATOM;
+        message.SUBSTATE = strlen(atom);
+        if(send(LAIN_LOCAL_SEND_SOCKET, (void*)&message, sizeof(lain_remote_t), 0) < 0)
+            return LAIN_RETURN_FAILURE;
+        if(write(LAIN_LOCAL_SEND_SOCKET, atom, strlen(atom)) < 0)
+            return LAIN_RETURN_FAILURE;
+        return LAIN_RETURN_SUCCESS;
+    }
+    return LAIN_RETURN_FAILURE;
 }

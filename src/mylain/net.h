@@ -43,10 +43,13 @@ typedef struct LAIN_REMOTE_COM
 } lain_remote_t;
 
 
-unsigned lain_net_setup(void);
-unsigned lain_net_connect(const char* address);
-unsigned lain_net_dispose(void);
-void*    lain_net_listener_loop(void* unused);
-void     lain_net_fetch_ip(void);
+unsigned  lain_net_setup(void);
+unsigned  lain_net_connect(const char* address);
+unsigned  lain_net_dispose(void);
+void*     lain_net_listener_loop(void* unused);
+void      lain_net_fetch_ip(void);
+
+unsigned  lain_net_dispatch_com(unsigned long long command);
+unsigned  lain_net_dispatch_atom(const char* atom);
 
 #endif

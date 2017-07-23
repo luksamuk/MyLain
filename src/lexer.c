@@ -36,12 +36,28 @@ enum LAIN_COMMAND lain_get_command(const char* literal)
         return LAIN_COM_HELP;
     else if(LAIN_CHECK_LITERAL(literal, "status"))
         return LAIN_COM_STATUS;
-    else if(LAIN_CHECK_LITERAL(literal, "dispatch"))
-        return LAIN_COM_DISPATCH;
+    else if(LAIN_CHECK_LITERAL(literal, "qdisp"))
+        return LAIN_COM_QDISP;
     else if(LAIN_CHECK_LITERAL(literal, "printext"))
         return LAIN_COM_PRINTEXT;
     
     return LAIN_COM_ATOM;
+}
+
+const char* lain_command_name(enum LAIN_COMMAND com)
+{
+    switch(com) {
+    case LAIN_COM_ATOM:      return "ATOM";
+    case LAIN_COM_QUIT:      return "QUIT";
+    case LAIN_COM_CONNECT:   return "CONNECT";
+    case LAIN_COM_CONFIG:    return "CONFIG";
+    case LAIN_COM_HELP:      return "HELP";
+    case LAIN_COM_END:       return "COMMAND_END";
+    case LAIN_COM_STATUS:    return "STATUS";
+    case LAIN_COM_QDISP:     return "QUEUE_DISPATCH";
+    case LAIN_COM_PRINTEXT:  return "PRINTEXT";
+    };
+    return "UNKNOWN";
 }
 
 // TODO: unbloat this function
@@ -224,23 +240,31 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
     }
 
     // Dispatch pending
-    else if(LAIN_CHKSTATE(LAIN_COM_DISPATCH)) {
+    else if(LAIN_CHKSTATE(LAIN_COM_QDISP)) {
         lain_reset_all();
-        unsigned sub_ret_val;
+        unsigned sub_ret_val = LAIN_RETURN_ONGOING;
         // Dispatch queued commands
         sem_wait(&LAIN_NET_LISTENER_SEMAPHORE);
         while(LAIN_REMOTE_COM_QUEUE->first != NULL) {
-            unsigned long long com = lain_com_dequeue(LAIN_REMOTE_COM_QUEUE);
-            printf("!lain_dispatch{0x%08llX}\n", com);
-            LAIN_MSTATE |= com;
-            sub_ret_val = lain_dispatch(NULL, com);
-            if(sub_ret_val == LAIN_RETURN_ONGOING)
-                sub_ret_val = lain_dispatch(NULL, LAIN_COM_END);
-            lain_reset_all();
-            if(sub_ret_val == LAIN_RETURN_SUCCESS)
-                puts("!sub_ans{Ok}");
-            else printf("!ans{Err:0x%08X}\n", sub_ret_val);
+            lain_com_queue_info info = lain_com_dequeue(LAIN_REMOTE_COM_QUEUE);
+            if(info.com == LAIN_COM_ATOM)
+                printf("!lain_qdisp{ATOM:%s}\n", info.atom);
+            else printf("!lain_qdisp{%s}\n", lain_command_name(info.com));
+            
+            if(!((info.com == LAIN_COM_END) && !sub_ret_val)) {
+                LAIN_MSTATE |= info.com;
+                sub_ret_val = lain_dispatch(info.atom, info.com);
+            }
+            if(info.atom) free(info.atom);
         }
+        
+        if(sub_ret_val == LAIN_RETURN_ONGOING)
+                sub_ret_val = lain_dispatch(NULL, LAIN_COM_END);
+        
+        if(sub_ret_val == LAIN_RETURN_SUCCESS)
+            puts("!sub_ans{Ok}");
+        else printf("!ans{Err:0x%08X}\n", sub_ret_val);
+        
         sem_post(&LAIN_NET_LISTENER_SEMAPHORE);
         
         return LAIN_RETURN_SUCCESS;
@@ -273,6 +297,7 @@ void lain_com_enqueue(lain_com_queue_t* queue, unsigned long long com)
         queue->first = malloc(sizeof(lain_com_queue_node));
         queue->first->next = NULL;
         queue->first->com = com;
+        queue->first->atom = NULL;
         queue->last = queue->first;
         queue->amount = 1ul;
         return;
@@ -280,23 +305,52 @@ void lain_com_enqueue(lain_com_queue_t* queue, unsigned long long com)
 
     lain_com_queue_node* aux = malloc(sizeof(lain_com_queue_node));
     aux->com = com;
+    aux->atom = NULL;
     aux->next = NULL;
     queue->last->next = aux;
     queue->last = aux;
     queue->amount++;
 }
 
-unsigned long long lain_com_dequeue(lain_com_queue_t* queue)
+void lain_com_enqueue_atom(lain_com_queue_t* queue, char* atom)
 {
-    if(!queue || !queue->first)
-        return LAIN_COM_END;
+    if(!queue) return;
 
-    unsigned long long com = queue->first->com;
+    if(!queue->first) {
+        queue->first = malloc(sizeof(lain_com_queue_node));
+        queue->first->next = NULL;
+        queue->first->com = LAIN_COM_ATOM;
+        queue->first->atom = atom;
+        queue->last = queue->first;
+        queue->amount = 1ul;
+        return;
+    }
+
+    lain_com_queue_node* aux = malloc(sizeof(lain_com_queue_node));
+    aux->com = LAIN_COM_ATOM;
+    aux->atom = atom;
+    aux->next = NULL;
+    queue->last->next = aux;
+    queue->last = aux;
+    queue->amount++;
+}
+
+lain_com_queue_info lain_com_dequeue(lain_com_queue_t* queue)
+{
+    lain_com_queue_info info;
+    info.com = LAIN_COM_END;
+    info.atom = NULL;
+    
+    if(!queue || !queue->first)
+        return info;
+
+    info.com = queue->first->com;
+    info.atom = queue->first->atom;
     lain_com_queue_node* next = queue->first->next;
     free(queue->first);
     queue->first = next;
     queue->amount--;
-    return com;
+    return info;
 }
 
 void lain_com_queue_clear(lain_com_queue_t* queue)

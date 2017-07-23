@@ -22,15 +22,15 @@
 
 enum LAIN_COMMAND
 {
-    LAIN_COM_ATOM     = 0llu,
-    LAIN_COM_QUIT     = 1llu,
-    LAIN_COM_CONNECT  = 2llu,
-    LAIN_COM_CONFIG   = 4llu,
-    LAIN_COM_HELP     = 8llu,
-    LAIN_COM_END      = 16llu,
-    LAIN_COM_STATUS   = 32llu,
-    LAIN_COM_DISPATCH = 64llu,
-    LAIN_COM_PRINTEXT = 128llu,
+    LAIN_COM_ATOM      = 0llu,
+    LAIN_COM_QUIT      = 1llu,
+    LAIN_COM_CONNECT   = 2llu,
+    LAIN_COM_CONFIG    = 4llu,
+    LAIN_COM_HELP      = 8llu,
+    LAIN_COM_END       = 16llu,
+    LAIN_COM_STATUS    = 32llu,
+    LAIN_COM_QDISP     = 64llu,
+    LAIN_COM_PRINTEXT  = 128llu,
 };
 
 enum LAIN_SUBCOMMAND_CFG
@@ -39,9 +39,16 @@ enum LAIN_SUBCOMMAND_CFG
     LAIN_SUBCOM_SETCFG = 2llu
 };
 
+typedef struct LAIN_COM_QUEUE_INFO
+{
+    unsigned long long com;
+    char*              atom;
+} lain_com_queue_info;
+
 typedef struct LAIN_COM_QUEUE_NODE
 {
     unsigned long long          com;
+    char*                       atom;
     struct LAIN_COM_QUEUE_NODE* next;
 } lain_com_queue_node;
 
@@ -55,13 +62,14 @@ typedef struct LAIN_COM_QUEUE
 extern lain_com_queue_t* LAIN_REMOTE_COM_QUEUE;
 
 
+enum LAIN_COMMAND   lain_get_command(const char* literal);
+const char*         lain_command_name(enum LAIN_COMMAND com);
+unsigned            lain_dispatch(const char* literal, enum LAIN_COMMAND command);
 
-enum LAIN_COMMAND lain_get_command(const char* literal);
-unsigned          lain_dispatch(const char* literal, enum LAIN_COMMAND command);
 
-
-void               lain_com_enqueue(lain_com_queue_t* queue, unsigned long long com);
-unsigned long long lain_com_dequeue(lain_com_queue_t* queue);
-void               lain_com_queue_clear(lain_com_queue_t* queue);
+void                lain_com_enqueue(lain_com_queue_t* queue, unsigned long long com);
+void                lain_com_enqueue_atom(lain_com_queue_t* queue, char* atom);
+lain_com_queue_info lain_com_dequeue(lain_com_queue_t* queue);
+void                lain_com_queue_clear(lain_com_queue_t* queue);
 
 #endif
