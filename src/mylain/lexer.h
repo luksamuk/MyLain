@@ -31,6 +31,7 @@ enum LAIN_COMMAND
     LAIN_COM_STATUS    = 32llu,
     LAIN_COM_QDISP     = 64llu,
     LAIN_COM_PRINTEXT  = 128llu,
+    LAIN_COM_DISPATCH  = 256llu
 };
 
 enum LAIN_SUBCOMMAND_CFG
@@ -62,6 +63,7 @@ typedef struct LAIN_COM_QUEUE
 extern lain_com_queue_t* LAIN_REMOTE_COM_QUEUE;
 
 
+enum LAIN_COMMAND   lain_get_command_unchecked(const char* literal);
 enum LAIN_COMMAND   lain_get_command(const char* literal);
 const char*         lain_command_name(enum LAIN_COMMAND com);
 unsigned            lain_dispatch(const char* literal, enum LAIN_COMMAND command);

@@ -64,6 +64,9 @@ unsigned lain_eval(char* command)
 
         cr_returnval = lain_dispatch(cr_literal, comm);
         cr_literal = strtok(NULL, " ");
+
+        if(cr_returnval == LAIN_RETURN_FAILURE)
+            break;
     }
     cr_returnval = lain_dispatch(NULL, LAIN_COM_END);
     return cr_returnval;

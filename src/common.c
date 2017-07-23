@@ -43,6 +43,8 @@ void lain_print_help(const char* literal)
                "             client is connected to server, server\n"
                "             status is fetched as well.\n"
                "qdisp     -- Dispatches queued subprocesses.\n"
+               "dispatch  -- [atoms] Dispatches processes to all\n"
+               "             relays.\n"
                "printext  -- Prints next sequence of atoms as a \n"
                "             continuous string.\n"
                "\n",
@@ -60,9 +62,9 @@ void lain_print_help(const char* literal)
                    "alias:   quit\n"
                    "Safely halts MyLain.\n");
         else if(LAIN_CHECK_LITERAL(literal, "connect"))
-            printf("command: connect [ip:port]\n"
-                   "Connects to a MyLain server on the given IP address "
-                   "and port. If omitted, will connect to the default server, "
+            printf("command: connect [ip]\n"
+                   "Connects to a MyLain server on the given IP address. "
+                   "If omitted, will connect to the default server, "
                    "given that it has already been configured.\n");
         else if(LAIN_CHECK_LITERAL(literal, "config"))
             printf("command: config [{get/set} field]\n"
@@ -74,7 +76,7 @@ void lain_print_help(const char* literal)
                    "status of the server and/or the Lain network, if "
                    "connected.\n");
         }
-        else if(LAIN_CHECK_LITERAL(literal, "qdispatch")) {
+        else if(LAIN_CHECK_LITERAL(literal, "qdisp")) {
             printf("command: qdisp\n"
                    "Dispatches subprocesses which were queued by "
                    "remote requests.\n");
@@ -82,6 +84,16 @@ void lain_print_help(const char* literal)
         else if(LAIN_CHECK_LITERAL(literal, "printext")) {
             printf("command: printext [atoms]\n"
                    "Prints all atoms following the command.\n");
+        }
+        else if(LAIN_CHECK_LITERAL(literal, "dispatch")) {
+            printf("command: dispatch [atoms]\n"
+                   "Dispatches subprocesses to the queues of all "
+                   "connected peers.\n"
+                   "You need to be connected to at least a single "
+                   "peer for this to work.\n"
+                   "Follow this command with a single command, "
+                   "composed of one or more atoms, which you want to "
+                   "dispatch.\n");
         }
         else {
             printf("Sorry, no help for this command right now...\n");

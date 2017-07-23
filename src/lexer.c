@@ -19,12 +19,8 @@
 #include "mylain/common.h"
 #include "mylain/net.h"
 
-
-enum LAIN_COMMAND lain_get_command(const char* literal)
+enum LAIN_COMMAND lain_get_command_unchecked(const char* literal)
 {
-    if(LAIN_MSTATE != 0ul)
-        return LAIN_COM_ATOM;
-    
     if(LAIN_CHECK_LITERAL(literal, "exit")
        || LAIN_CHECK_LITERAL(literal, "quit"))
         return LAIN_COM_QUIT;
@@ -40,8 +36,18 @@ enum LAIN_COMMAND lain_get_command(const char* literal)
         return LAIN_COM_QDISP;
     else if(LAIN_CHECK_LITERAL(literal, "printext"))
         return LAIN_COM_PRINTEXT;
+    else if(LAIN_CHECK_LITERAL(literal, "dispatch"))
+        return LAIN_COM_DISPATCH;
     
     return LAIN_COM_ATOM;
+}
+
+enum LAIN_COMMAND lain_get_command(const char* literal)
+{
+    if(LAIN_MSTATE != 0ul)
+        return LAIN_COM_ATOM;
+    
+    return lain_get_command_unchecked(literal);
 }
 
 const char* lain_command_name(enum LAIN_COMMAND com)
@@ -56,6 +62,7 @@ const char* lain_command_name(enum LAIN_COMMAND com)
     case LAIN_COM_STATUS:    return "STATUS";
     case LAIN_COM_QDISP:     return "QUEUE_DISPATCH";
     case LAIN_COM_PRINTEXT:  return "PRINTEXT";
+    case LAIN_COM_DISPATCH:  return "REMOTE_DISPATCH";
     };
     return "UNKNOWN";
 }
@@ -239,7 +246,7 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
         }
     }
 
-    // Dispatch pending
+    // Dispatch queue
     else if(LAIN_CHKSTATE(LAIN_COM_QDISP)) {
         lain_reset_all();
         unsigned sub_ret_val = LAIN_RETURN_ONGOING;
@@ -276,6 +283,35 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
             printf("%s ", literal);
         } else if(comm == LAIN_COM_END) {
             puts("");
+            lain_reset_all();
+            return LAIN_RETURN_SUCCESS;
+        }
+    }
+
+    // Dispatch remotely
+    else if(LAIN_CHKSTATE(LAIN_COM_DISPATCH)) {
+        // Check for connection
+        if(!LAIN_NET_READY) {
+            puts("Cannot dispatch remote commands while disconnected");
+            lain_reset_all();
+            return LAIN_RETURN_FAILURE;
+        }
+        
+        if(comm == LAIN_COM_ATOM) {
+            // First command needs to be checked
+            if(!LAIN_SUBSTATE) {
+                enum LAIN_COMMAND possible_com = lain_get_command_unchecked(literal);
+                if(possible_com == LAIN_COM_ATOM) {
+                    lain_net_dispatch_atom(literal);
+                } else lain_net_dispatch_com(possible_com);
+                LAIN_SUBSTATE = 1llu;
+            } else {
+                // Next commands are always just atoms
+                lain_net_dispatch_atom(literal);
+            }
+        } else if(comm == LAIN_COM_END) {
+            // Dispatch command end
+            lain_net_dispatch_com(LAIN_COM_END);
             lain_reset_all();
             return LAIN_RETURN_SUCCESS;
         }

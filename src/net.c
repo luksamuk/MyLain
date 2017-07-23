@@ -65,6 +65,11 @@ unsigned lain_net_setup(void)
     LAIN_LOCAL_RECV_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
     assert(LAIN_LOCAL_RECV_SOCKET != -1);
 
+    // Tell kernel we intend to reuse the socket soon
+    int yes = 1;
+    //char yes = '1'; // Solaris only
+    assert(setsockopt(LAIN_LOCAL_RECV_SOCKET, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) != -1);
+
     // Bind listener socket to port
     memset(&sa_local_recv, 0, sizeof(struct sockaddr_in));
     sa_local_recv.sin_family      = AF_INET;
@@ -91,20 +96,28 @@ unsigned lain_net_connect(const char* address)
 {
     printf("Warning: this is an incomplete feature\n");
     if(LAIN_NET_READY == 0) {
-        // Open socket
-        printf("Opening socket...\n");
-        //LAIN_LOCAL_SEND_SOCKET = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-        LAIN_LOCAL_SEND_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
-        assert(LAIN_LOCAL_SEND_SOCKET != -1);
+        if(LAIN_LOCAL_SEND_SOCKET == -1) {
+            // Open socket
+            printf("Opening socket...\n");
+            //LAIN_LOCAL_SEND_SOCKET = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+            LAIN_LOCAL_SEND_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
+            assert(LAIN_LOCAL_SEND_SOCKET != -1);
 
-        // Bind local IP and port
-        memset(&sa_local_send, 0, sizeof(struct sockaddr_in));
-        sa_local_send.sin_family = AF_INET;
-        sa_local_send.sin_port   = htons(LAIN_LOCAL_SEND_PORT);
-        sa_local_send.sin_addr.s_addr =  INADDR_ANY;
-        assert(bind(LAIN_LOCAL_SEND_SOCKET, (struct sockaddr*)&sa_local_send, sizeof(struct sockaddr)) != -1);
+            // Mark socket for reusage
+            int yes = 1;
+            //char yes = '1'; // Solaris only
+            assert(setsockopt(LAIN_LOCAL_SEND_SOCKET, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) != -1);
 
-        printf("Currently listening to port %u.\n", LAIN_LOCAL_RECV_PORT);
+            // Bind local IP and port
+            memset(&sa_local_send, 0, sizeof(struct sockaddr_in));
+            sa_local_send.sin_family = AF_INET;
+            sa_local_send.sin_port   = htons(LAIN_LOCAL_SEND_PORT);
+            sa_local_send.sin_addr.s_addr =  INADDR_ANY;
+            assert(bind(LAIN_LOCAL_SEND_SOCKET, (struct sockaddr*)&sa_local_send, sizeof(struct sockaddr)) != -1);
+        }
+
+        printf("Sending on port %u.\nListening on port %u.\n",
+               LAIN_LOCAL_SEND_PORT, LAIN_LOCAL_RECV_PORT);
         
     
         // Setup remote server
@@ -113,17 +126,20 @@ unsigned lain_net_connect(const char* address)
         sa_remote.sin_port = htons(LAIN_LOCAL_RECV_PORT);
         sa_remote.sin_addr.s_addr = inet_addr((address == NULL) ? "127.0.0.1" : address);
 
-        puts("Connecting to localhost...");
+        printf("Connecting to %s... ", (address == NULL) ? "localhost" : address);
+        fflush(stdout);
         if(connect(LAIN_LOCAL_SEND_SOCKET, (struct sockaddr*)&sa_remote, sizeof(struct sockaddr)) == -1) {
-            printf("Couldn't connect.\n");
+            puts("Couldn't connect.");
             return LAIN_RETURN_FAILURE;
         }
         puts("Connected!");
 
         LAIN_NET_READY = 1;
     }
-    
-    puts("Sending message #1: Request printing status...");
+
+    // This code intentionally left here for future consults.
+    // Used to test connections.
+    /*puts("Sending message #1: Request printing status...");
     lain_net_dispatch_com(LAIN_COM_STATUS);
     lain_net_dispatch_com(LAIN_COM_END);
 
@@ -131,7 +147,7 @@ unsigned lain_net_connect(const char* address)
     lain_net_dispatch_com(LAIN_COM_CONFIG);
     lain_net_dispatch_atom("get");
     lain_net_dispatch_atom("motto");
-    lain_net_dispatch_com(LAIN_COM_END);
+    lain_net_dispatch_com(LAIN_COM_END);*/
     
     return LAIN_RETURN_SUCCESS;
 }
@@ -142,11 +158,12 @@ unsigned lain_net_dispose(void)
     pthread_join(LAIN_NET_LISTENER_THREAD, NULL);
     
     if(LAIN_LOCAL_SEND_SOCKET != -1)
-        assert(close(LAIN_LOCAL_SEND_SOCKET) != -1);
+        assert(shutdown(LAIN_LOCAL_SEND_SOCKET, SHUT_WR) != -1);
     if(LAIN_LOCAL_RECV_SOCKET != -1)
-        assert(close(LAIN_LOCAL_RECV_SOCKET) != -1);
+        assert(shutdown(LAIN_LOCAL_RECV_SOCKET, SHUT_RD) != -1);
 
     LAIN_NET_READY = 0;
+    LAIN_LOCAL_SEND_SOCKET = LAIN_LOCAL_RECV_SOCKET = -1;
     
     lain_com_queue_clear(LAIN_REMOTE_COM_QUEUE);
     free(LAIN_REMOTE_COM_QUEUE);
