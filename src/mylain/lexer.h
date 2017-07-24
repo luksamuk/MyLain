@@ -31,7 +31,8 @@ enum LAIN_COMMAND
     LAIN_COM_STATUS    = 32llu,
     LAIN_COM_QDISP     = 64llu,
     LAIN_COM_PRINTEXT  = 128llu,
-    LAIN_COM_DISPATCH  = 256llu
+    LAIN_COM_DISPATCH  = 256llu,
+    LAIN_COM_QPEEK     = 512llu
 };
 
 enum LAIN_SUBCOMMAND_CFG

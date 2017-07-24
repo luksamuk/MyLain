@@ -43,6 +43,7 @@ void lain_print_help(const char* literal)
                "             client is connected to server, server\n"
                "             status is fetched as well.\n"
                "qdisp     -- Dispatches queued subprocesses.\n"
+               "qpeek     -- Prints all queued subprocesses.\n"
                "dispatch  -- [atoms] Dispatches processes to all\n"
                "             relays.\n"
                "printext  -- Prints next sequence of atoms as a \n"
@@ -94,6 +95,11 @@ void lain_print_help(const char* literal)
                    "Follow this command with a single command, "
                    "composed of one or more atoms, which you want to "
                    "dispatch.\n");
+        }
+        else if(LAIN_CHECK_LITERAL(literal, "qpeek")) {
+            printf("command: qpeek\n"
+                   "Shows all processes, from first to last, which "
+                   "are on the subprocess queue.\n");
         }
         else {
             printf("Sorry, no help for this command right now...\n");

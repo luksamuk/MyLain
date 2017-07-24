@@ -38,6 +38,8 @@ enum LAIN_COMMAND lain_get_command_unchecked(const char* literal)
         return LAIN_COM_PRINTEXT;
     else if(LAIN_CHECK_LITERAL(literal, "dispatch"))
         return LAIN_COM_DISPATCH;
+    else if(LAIN_CHECK_LITERAL(literal, "qpeek"))
+        return LAIN_COM_QPEEK;
     
     return LAIN_COM_ATOM;
 }
@@ -63,6 +65,7 @@ const char* lain_command_name(enum LAIN_COMMAND com)
     case LAIN_COM_QDISP:     return "QUEUE_DISPATCH";
     case LAIN_COM_PRINTEXT:  return "PRINTEXT";
     case LAIN_COM_DISPATCH:  return "REMOTE_DISPATCH";
+    case LAIN_COM_QPEEK:     return "QUEUE_PEEK";
     };
     return "UNKNOWN";
 }
@@ -254,9 +257,9 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
         sem_wait(&LAIN_NET_LISTENER_SEMAPHORE);
         while(LAIN_REMOTE_COM_QUEUE->first != NULL) {
             lain_com_queue_info info = lain_com_dequeue(LAIN_REMOTE_COM_QUEUE);
-            if(info.com == LAIN_COM_ATOM)
-                printf("!lain_qdisp{ATOM:%s}\n", info.atom);
-            else printf("!lain_qdisp{%s}\n", lain_command_name(info.com));
+            //if(info.com == LAIN_COM_ATOM)
+            //    printf("!lain_qdisp{ATOM:%s}\n", info.atom);
+            //else printf("!lain_qdisp{%s}\n", lain_command_name(info.com));
             
             if(!((info.com == LAIN_COM_END) && !sub_ret_val)) {
                 LAIN_MSTATE |= info.com;
@@ -315,6 +318,18 @@ unsigned lain_dispatch(const char* literal, enum LAIN_COMMAND comm)
             lain_reset_all();
             return LAIN_RETURN_SUCCESS;
         }
+    }
+
+    // Peek at queue
+    else if(LAIN_CHKSTATE(LAIN_COM_QPEEK)) {
+        lain_com_queue_node* i;
+        for(i = LAIN_REMOTE_COM_QUEUE->first; i != NULL; i = i->next) {
+            if(i->com == LAIN_COM_ATOM) {
+                printf("!lain_qpeek{ATOM:%s}\n", i->atom);
+            } else printf("!lain_qpeek{%s}\n", lain_command_name(i->com));
+        }
+        lain_reset_all();
+        return LAIN_RETURN_SUCCESS;
     }
     
     return LAIN_RETURN_ONGOING;
